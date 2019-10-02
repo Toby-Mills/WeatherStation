@@ -1,3 +1,6 @@
+//Pins
+int pinLight = A0;
+
 int reading [10];
 int nextReadingIndex = 0;
 int lastReading = 0;
@@ -21,8 +24,8 @@ void setup() {
   //Register variables and methods to allow control via Particle Cloud
   Particle.variable("sourceCode", sourceCode, STRING);
   Particle.variable("lastReading", lastReading);
-  Particle.variable("averageReading", averageReading);
-
+  Particle.variable("averageReading", lastAverageReading);
+  Particle.function("publish", cloud_publishAverageReading);
 
   timeOfLastReading = -readingSeparation;
 }
@@ -45,9 +48,9 @@ void publishAverageReading(){
   int valueToPublish;
   char stringToPublish[40];
 
-  valueToPublish = averageReading[nextAverageReadingIndex -1];
+  valueToPublish = averageReading[lastAverageReadingIndex];
   sprintf(stringToPublish, "%d", valueToPublish);
-  Particle.publish("lightReading",stringToPublish );
+  Particle.publish("lightReading",stringToPublish, PRIVATE );
 
   timeOfLastPublish = millis();
 }
@@ -56,7 +59,7 @@ void publishAverageReading(){
 void addNewReading(){
   int newValue;
   
-  newValue = analogRead(A0);
+  newValue = currentLightReading();
 
   reading[nextReadingIndex] = newValue;
   nextReadingIndex++;
@@ -75,8 +78,8 @@ void updateAverageReading(){
   int previousAverageReading = 0;
   int previousAverageReadingIndex = 0;
 
-  int previousAverageReadingIndex = lastAverageReadingIndex;
-  int previousAverageReading = averageReading[previousAverageReadingIndex];
+  previousAverageReadingIndex = lastAverageReadingIndex;
+  previousAverageReading = averageReading[previousAverageReadingIndex];
 
   for ( int readingIndex = 0; readingIndex < 10; readingIndex++ ) {
     if (reading[ readingIndex ] > 0){
@@ -89,5 +92,20 @@ void updateAverageReading(){
   lastAverageReadingIndex = lastAverageReadingIndex % 10;
   averageReading[lastAverageReadingIndex] = sumOfReadings / countOfReadings;
 
-  
+  lastAverageReading = averageReading[lastAverageReadingIndex];
+}
+//--------------------------------------------------------------------------------------
+int currentLightReading(){
+  int newPinReading = 0;
+  int newValue = 0;
+
+  newPinReading = analogRead(pinLight);
+  newValue = (4095-newPinReading)/41;
+
+  return newValue;
+}
+
+int cloud_publishAverageReading(String value){
+  publishAverageReading();
+  return 1;
 }
