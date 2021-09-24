@@ -1,4 +1,5 @@
 #include "MQTT.h"
+#include "math.h"
 
 //Pins
 int pinLight = A0;
@@ -125,6 +126,26 @@ void updateAverageReading()
   averageReading[lastAverageReadingIndex] = sumOfReadings / countOfReadings;
 
   lastAverageReading = averageReading[lastAverageReadingIndex];
+
+  //if moving up or down a bracket, publish an event
+  int previousAverageReadingBracket = floor(previousAverageReading / 5);
+  int lastAverageReadingBracket = floor(lastAverageReading / 5);
+  int valueToPublish = 0;
+  char stringToPublish[40];
+
+  if (previousAverageReadingBracket > lastAverageReadingBracket)
+  {
+    valueToPublish = previousAverageReadingBracket * 5;
+    sprintf(stringToPublish, "%d", valueToPublish);
+    Particle.publish("lightLevelBelow", stringToPublish);
+  }
+
+  if (previousAverageReadingBracket < lastAverageReadingBracket)
+  {
+    valueToPublish = lastAverageReadingBracket * 5;
+    sprintf(stringToPublish, "%d", valueToPublish);
+    Particle.publish("lightLevelAbove", stringToPublish);
+  }
 }
 //--------------------------------------------------------------------------------------
 int currentLightReading()
