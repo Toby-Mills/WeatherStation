@@ -78,7 +78,7 @@ void publishAverageReading()
 
   valueToPublish = averageReading[lastAverageReadingIndex];
   sprintf(stringToPublish, "%d", valueToPublish);
-  Particle.publish("lightReading", stringToPublish, PRIVATE);
+  Particle.publish("lightLevel", stringToPublish, PRIVATE);
   mqttClient.publish(mqttTopic_weather_light_level, stringToPublish);
 
   timeOfLastPublish = millis();
