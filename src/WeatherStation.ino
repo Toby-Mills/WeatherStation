@@ -42,22 +42,21 @@ void setup()
 
 void loop()
 {
-  if (!mqttConnected)
+  if (!mqttClient.isConnected())
   {
-    if (mqttClient.isConnected())
-    {
-      mqttConnected = true;
-      mqttClient.publish("stat/weatherStation", "connected");
-    }
-    else
-    {
-      mqttClient.connect("weatherStation");
-    }
+    mqttConnected = false;
+    mqttClient.connect("weatherStation");
   }
   else
   {
+    if (!mqttConnected)
+    {
+      mqttConnected = true;
+      mqttClient.publish("stat/weatherStation", "connected");
+      Particle.publish("Log Event", "mqtt connected");
+    }
     mqttClient.loop();
-  }
+  };
 
   if (millis() > timeOfLastReading + readingSeparation)
   {
